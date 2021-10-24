@@ -142,7 +142,7 @@
              END-READ
            END-IF
            
-     *    INFILE DATA MOVED TO ARRAY 2
+      *    INFILE DATA MOVED TO ARRAY 2
            IF WS-FS2 NOT = 10
              READ INFILE2
              NOT AT END
@@ -153,7 +153,7 @@
              END-READ
            END-IF
            
-     *    ARRAY LOADED FINISHED, PERFORM VALIDACTION
+      *    ARRAY LOADED FINISHED, PERFORM VALIDACTION
            IF WS-FS1 =10 AND WS-FS2 =  10
               PERFORM 4400-VALID-PARA THRU
                       4400-VALID-PARA-EXIT
