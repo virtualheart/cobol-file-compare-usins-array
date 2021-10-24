@@ -10,15 +10,15 @@ DDDDD<br>
 
 input 2
 -------
-ccccc<br>
-ddddd<br>
-eeeee<br>
-fffff<br>
+CCCCC<br>
+DDDDD<br>
+EEEEE<br>
+FFFFF<br>
 
 output 1 common record's
 --------
-ccccc<br>
-ddddd<br>
+CCCCC<br>
+DDDDD<br>
 
 output 2 non common record both file
 --------
