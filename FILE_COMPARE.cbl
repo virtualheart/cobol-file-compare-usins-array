@@ -1,3 +1,9 @@
+      ********************************************************
+      * Author:VIRTUAL HEART
+      * Date:25-10-2021
+      * Purpose:TRAINING 
+      * Tectonics: cobc
+      ********************************************************
        IDENTIFICATION DIVISION.
        PROGRAM-ID. COMPARE.
        ENVIRONMENT DIVISION.
@@ -65,11 +71,19 @@
       *
        WORKING-STORAGE SECTION.
        01 WS-FS1               PIC 9(2).
+         88 F1-SUCCESS           VALUE 00.
+         88 F1-EOF               VALUE 10.
        01 WS-FS2               PIC 9(2).
+         88 F2-SUCCESS           VALUE 00.
+         88 F2-EOF               VALUE 10.         
        01 WS-FS3               PIC 9(2).
+         88 F3-SUCCESS           VALUE 00.
        01 WS-FS4               PIC 9(2).
+         88 F4-SUCCESS           VALUE 00.
        01 WS-FS5               PIC 9(2).
+         88 F5-SUCCESS           VALUE 00.
        01 WS-FS6               PIC 9(2).
+         88 F6-SUCCESS           VALUE 00.
       *
        01 WS-I                 PIC 9(2).
        01 WS-J                 PIC 9(2).
@@ -110,8 +124,8 @@
            PERFORM 2100-OPEN-PARA THRU
                    2100-OPEN-PARA-EXIT
            PERFORM 2200-READ-PARA THRU
-                   2200-READ-PARA-EXIT UNTIL WS-FS1 = 10
-                                         AND WS-FS2 = 10
+                   2200-READ-PARA-EXIT UNTIL F1-EOF
+                                         AND F2-EOF
            PERFORM 4300-CLOSE-PARA THRU
                    4300-CLOSE-PARA-EXIT.
       *
@@ -121,16 +135,57 @@
       *    OPEN ALL INPUT,OUTPUT FILE 
        2100-OPEN-PARA.
            OPEN INPUT INFILE1
+           EVALUATE TRUE
+           WHEN F1-SUCCESS
+             DISPLAY 'FILE 1 OPEN'
+           WHEN F1-EOF
+             DISPLAY 'FILE 1 RECOED END'
+           WHEN OTHER
+             DISPLAY 'FILE 1 NOT OPEN ' WS-FS1
+           END-EVALUATE
 
            OPEN INPUT INFILE2
+           EVALUATE TRUE
+           WHEN F2-SUCCESS
+             DISPLAY 'FILE 2 OPEN'
+           WHEN F2-EOF
+             DISPLAY 'FILE 2 RECOED END'
+           WHEN OTHER
+             DISPLAY 'FILE 2 NOT OPEN ' WS-FS2
+           END-EVALUATE
 
            OPEN OUTPUT OUTFILE1
+           EVALUATE TRUE
+           WHEN F3-SUCCESS
+             DISPLAY 'FILE 3 OPEN'
+           WHEN OTHER
+             DISPLAY 'FILE 3 NOT OPEN ' WS-FS3
+           END-EVALUATE
 
            OPEN OUTPUT OUTFILE2
+           EVALUATE TRUE
+           WHEN F4-SUCCESS
+             DISPLAY 'FILE 4 OPEN'
+           WHEN OTHER
+             DISPLAY 'FILE 4 NOT OPEN ' WS-FS4
+           END-EVALUATE
 
            OPEN OUTPUT OUTFILE3
-
-           OPEN OUTPUT OUTFILE4.
+           EVALUATE TRUE
+           WHEN F5-SUCCESS
+             DISPLAY 'FILE 5 OPEN'
+           WHEN OTHER
+             DISPLAY 'FILE 5 NOT OPEN ' WS-FS5
+           END-EVALUATE
+      
+           OPEN OUTPUT OUTFILE4
+           EVALUATE TRUE
+           WHEN F6-SUCCESS
+             DISPLAY 'FILE 6 OPEN'
+           WHEN OTHER
+             DISPLAY 'FILE 6 NOT OPEN ' WS-FS6
+           END-EVALUATE.
+      
       *
        2100-OPEN-PARA-EXIT.
            EXIT.
@@ -167,18 +222,6 @@
        2200-READ-PARA-EXIT.
            EXIT.
       ******************************************************************
-      *    CLOSE ALL INPUT,OUTPUT FILE 
-       4300-CLOSE-PARA.
-           CLOSE INFILE1
-                 INFILE2
-                 OUTFILE1
-                 OUTFILE2
-                 OUTFILE3 
-                 OUTFILE4.
-
-       4300-CLOSE-PARA-EXIT.
-           EXIT.
-
        4400-VALID-PARA.
       *    LOOP START 
       ******************************************************************
@@ -229,9 +272,21 @@
        4400-VALID-PARA-EXIT.
            EXIT.
       ******************************************************************
+      *    CLOSE ALL INPUT,OUTPUT FILE 
+       4300-CLOSE-PARA.
+           CLOSE INFILE1
+                 INFILE2
+                 OUTFILE1
+                 OUTFILE2
+                 OUTFILE3 
+                 OUTFILE4.
+
+       4300-CLOSE-PARA-EXIT.
+           EXIT.
+      ******************************************************************
        9000-TERM-PARA.
            STOP RUN.
        9000-TERM-PARA-EXIT.
            EXIT.
       ******************************************************************
-       END PROGRAM JARR.
+       END PROGRAM COMPARE.
