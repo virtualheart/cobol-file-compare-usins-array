@@ -215,23 +215,23 @@
       *    INFILE DATA MOVED TO ARRAY 1
            IF WS-FS1 NOT = 10
              READ INFILE1
-      *       NOT AT END
+             NOT AT END
               ADD 1 TO WS-I
               
               MOVE FS-INFILE1 TO ARR-INFILE1(WS-I)
 
-      *      END-READ
+            END-READ
            END-IF
       *    
       *    INFILE DATA MOVED TO ARRAY 2
            IF WS-FS2 NOT = 10
              READ INFILE2
-      *       NOT AT END
+             NOT AT END
                ADD 1 TO WS-J
                
                MOVE FS-INFILE2 TO ARR-INFILE2(WS-J)
 
-      *       END-READ
+             END-READ
            END-IF
       *    
       *    ARRAY LOADED FINISHED, PERFORM VALIDACTION
