@@ -1,0 +1,28 @@
+
+           EXEC SQL
+             DECLARE CR1 CURSOR
+             FOR
+              SELECT A.ID,
+                     A.NAME
+                     FROM JI_TSK1 A
+              WHERE EXISTS (
+                       SELECT B.ID
+                       FROM  JI_TSK2 B)
+           END-EXEC.
+      *
+           EXEC SQL
+             DECLARE CR2 CURSOR
+             FOR
+             SELECT A.ID,A.NAME FROM JI_TSK1 A
+             WHERE NOT EXISTS (SELECT B.ID,B.NAME
+             FROM JI_TSK2 B)
+           END-EXEC.
+      *
+           EXEC SQL
+             DECLARE CR3 CURSOR
+             FOR
+             SELECT B.ID,B.NAME FROM JI_TSK2 B
+             WHERE NOT EXISTS (SELECT A.ID,A.NAME
+             FROM JI_TSK1 A)
+           END-EXEC.
+      *
