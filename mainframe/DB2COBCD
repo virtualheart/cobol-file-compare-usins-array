@@ -1,0 +1,728 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. CA11J226.
+       ENVIRONMENT DIVISION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+      *
+           SELECT INPS ASSIGN TO DD1
+           ORGANIZATION   IS SEQUENTIAL
+           ACCESS         IS SEQUENTIAL
+           FILE STATUS    IS WS-FS1.
+      *
+           SELECT INKS ASSIGN TO DD2
+           ORGANIZATION   IS INDEXED
+           ACCESS         IS SEQUENTIAL
+           RECORD KEY     IS TI002-ID
+           FILE STATUS    IS WS-FS2.
+      *
+           SELECT OUT1 ASSIGN TO DD3
+           ORGANIZATION   IS SEQUENTIAL
+           ACCESS         IS SEQUENTIAL
+           FILE STATUS    IS WS-FS3.
+      *
+           SELECT OUT2 ASSIGN TO DD4
+           ORGANIZATION   IS SEQUENTIAL
+           ACCESS         IS SEQUENTIAL
+           FILE STATUS    IS WS-FS4.
+      *
+           SELECT OUT3 ASSIGN TO DD5
+           ORGANIZATION   IS SEQUENTIAL
+           ACCESS         IS SEQUENTIAL
+           FILE STATUS    IS WS-FS5.
+      *
+           SELECT OUT4 ASSIGN TO DD6
+           ORGANIZATION   IS SEQUENTIAL
+           ACCESS         IS SEQUENTIAL
+           FILE STATUS    IS WS-FS6.
+      *
+       DATA DIVISION.
+       FILE SECTION.
+      *
+       FD INPS.
+       01 TI001-PSREC.
+         02 TI001-ID           PIC X(5).
+         02 FILLER             PIC X.
+         02 TI001-ALL          PIC X(74).
+      *
+       FD INKS.
+       01 TI002-KSREC.
+         02 TI002-ID           PIC X(5).
+         02 FILLER             PIC X.
+         02 TI002-ALL          PIC X(74).
+      **************************************
+       FD OUT1.
+       01 TO001-OUTREC.
+         02 TO001-ID           PIC X(5).
+         02 FILLER             PIC X.
+         02 TO001-ALL          PIC X(74).
+      *
+       FD OUT2.
+       01 TO002-OUTREC.
+         02 TO002-ID           PIC X(5).
+         02 FILLER             PIC X.
+         02 TO002-ALL          PIC X(74).
+      *
+       FD OUT3.
+       01 TO003-OUTREC.
+         02 TO003-ID           PIC X(5).
+         02 FILLER             PIC X.
+         02 TO003-ALL          PIC X(74).
+      *
+       FD OUT4.
+       01 TO004-OUTREC.
+         02 TO004-ID           PIC X(5).
+         02 FILLER             PIC X.
+         02 TO004-ALL          PIC X(74).
+      *
+       WORKING-STORAGE SECTION.
+
+
+           EXEC SQL
+             INCLUDE SQLCA
+           END-EXEC.
+      *
+           EXEC SQL
+             INCLUDE TSK1TB1
+           END-EXEC.
+      *
+           EXEC SQL
+             INCLUDE TSK1TB2
+           END-EXEC.
+      *
+      ******* DB TO DB SQL ********
+           EXEC SQL
+             INCLUDE CURSORS
+           END-EXEC.
+      *****************************
+      *
+       01 WS-FS1               PIC 9(2).
+         88 F1-SUCC             VALUE 00.
+         88 F1-EOF              VALUE 10.
+         88 F1-FNF              VALUE 35.
+      *
+       01 WS-FS2               PIC 9(2).
+         88 F2-SUCC             VALUE 00.
+         88 F2-EOF              VALUE 10.
+         88 F2-FNF              VALUE 35.
+      *
+       01 WS-FS3               PIC 9(2).
+         88 F3-SUCC             VALUE 00.
+       01 WS-FS4               PIC 9(2).
+         88 F4-SUCC             VALUE 00.
+       01 WS-FS5               PIC 9(2).
+         88 F5-SUCC             VALUE 00.
+       01 WS-FS6               PIC 9(2).
+         88 F6-SUCC             VALUE 00.
+      *
+       01 WS-SQLCODE           PIC S9(3) SIGN LEADING SEPARATE.
+
+      *
+       01 WS-J                     PIC 9(2).
+       01 WS-K                     PIC 9(2).
+       01 WS-I                     PIC 9(2).
+      *
+       01 ARR-TABLE1.
+         02 AR001-INREC OCCURS 1 TO 100 TIMES DEPENDING ON WS-K.
+           04 AR001-ID             PIC X(5).
+           04 FILLER               PIC X.
+           04 AR001-ALL            PIC X(74).
+      *
+       PROCEDURE DIVISION.
+       0000-MAIN-PARA.
+           PERFORM 1000-INTIAL-PARA THRU
+                   1000-INTIAL-PARA-EXIT
+           PERFORM 2000-PROCESS-PARA THRU
+                   2000-PROCESS-PARA-EXIT
+           PERFORM 9000-TERM-PARA THRU
+                   9000-TERM-PARA-EXIT.
+       0000-MAIN-PARA-EXIT.
+           EXIT.
+      *
+       1000-INTIAL-PARA.
+           INITIALIZE WS-FS1 WS-FS2 WS-FS3 WS-FS4
+                      WS-FS5 WS-FS6.
+       1000-INTIAL-PARA-EXIT.
+           EXIT.
+      *
+       2000-PROCESS-PARA.
+           PERFORM 3000-OPEN-PARA THRU
+                   3000-OPEN-PARA-EXIT
+           PERFORM 4000-FIND-PARA THRU
+                   4000-FIND-PARA-EXIT
+           PERFORM 5000-CLOSE-PARA THRU
+                   5000-CLOSE-PARA-EXIT.
+       2000-PROCESS-PARA-EXIT.
+           EXIT.
+      *
+       3000-OPEN-PARA.
+      *
+           OPEN INPUT INPS
+           OPEN INPUT INKS
+
+           EVALUATE TRUE
+           WHEN F1-SUCC
+             CONTINUE
+           WHEN F2-SUCC
+             CONTINUE
+           WHEN F1-FNF OR F1-FNF
+             CONTINUE
+           WHEN OTHER
+             DISPLAY 'PS,KS FL ' WS-FS1 ' ' WS-FS2
+             STOP RUN
+           END-EVALUATE.
+      *
+           OPEN OUTPUT OUT1 OUT2 OUT3 OUT4
+           EVALUATE TRUE
+           WHEN F3-SUCC AND F4-SUCC AND
+                F5-SUCC AND F6-SUCC
+              CONTINUE
+           WHEN OTHER
+              DISPLAY 'OUTFILE NOT OP ' WS-FS3 ' '
+                                        WS-FS4 ' '
+                                        WS-FS5 ' '
+                                        WS-FS6 ' '
+           END-EVALUATE.
+
+       3000-OPEN-PARA-EXIT.
+           EXIT.
+      *
+       4000-FIND-PARA.
+
+           EVALUATE TRUE
+           WHEN F1-FNF AND F2-FNF
+             DISPLAY 'DATABASE'
+
+             PERFORM 4100-DBTODB-PARA THRU
+                     4100-DBTODB-PARA-EXIT
+
+           WHEN F1-SUCC AND F2-FNF
+             DISPLAY 'PS TO DB2'
+
+             PERFORM 4200-DBTOPS-PARA THRU
+                     4200-DBTOPS-PARA-EXIT
+
+           WHEN F1-FNF AND F2-SUCC
+             DISPLAY 'KSDS TO DB2'
+
+             PERFORM 4300-DBTOKS-PARA THRU
+                     4300-DBTOKS-PARA-EXIT
+
+           WHEN F1-SUCC AND F2-SUCC
+             DISPLAY 'NOT THIS CODE'
+
+           WHEN OTHER
+             DISPLAY 'HELP' WS-FS1 ' ' WS-FS2
+             STOP RUN
+           END-EVALUATE.
+
+       4000-FIND-PARA-EXIT.
+           EXIT.
+      *
+       4100-DBTODB-PARA.
+
+           EXEC SQL
+              OPEN CR1
+           END-EXEC.
+
+           EVALUATE TRUE
+           WHEN SQLCODE = 0
+             PERFORM 4100-FETCH1-PARA THRU
+                     4100-FETCH1-PARA-EXIT UNTIL SQLCODE = 100
+           WHEN OTHER
+             MOVE SQLCODE TO WS-SQLCODE
+             DISPLAY 'CR1 ERR ' WS-SQLCODE
+             STOP RUN
+           END-EVALUATE.
+      *
+           EXEC SQL
+              OPEN CR2
+           END-EXEC.
+           EVALUATE TRUE
+           WHEN SQLCODE = 0
+
+             PERFORM 4100-FETCH2-PARA THRU
+                     4100-FETCH2-PARA-EXIT UNTIL SQLCODE = 100
+
+           WHEN OTHER
+
+             MOVE SQLCODE TO WS-SQLCODE
+             DISPLAY 'CR2 ERR ' WS-SQLCODE
+
+           END-EVALUATE.
+      *
+           EXEC SQL
+              OPEN CR3
+           END-EXEC.
+
+           EVALUATE TRUE
+           WHEN SQLCODE = 0
+
+             PERFORM 4100-FETCH3-PARA THRU
+                     4100-FETCH3-PARA-EXIT UNTIL SQLCODE = 100
+
+           WHEN OTHER
+             MOVE SQLCODE TO WS-SQLCODE
+             DISPLAY 'CR3 ERR ' WS-SQLCODE
+           END-EVALUATE.
+
+      *
+
+       4100-DBTODB-PARA-EXIT.
+           EXIT.
+      ******************************
+       4100-FETCH1-PARA.
+
+           EXEC SQL
+              FETCH CR1 INTO :HV1-ID,
+                             :HV1-NAME
+           END-EXEC.
+           EVALUATE TRUE
+           WHEN SQLCODE = 0
+              MOVE HV1-ID-TEXT TO TO001-ID
+              MOVE HV1-NAME-TEXT TO TO001-ALL
+              PERFORM 1111-WRT-PARA THRU
+                      1111-WRT-PARA-EXIT
+           WHEN SQLCODE = 100
+             CONTINUE
+           WHEN OTHER
+             MOVE SQLCODE TO WS-SQLCODE
+             DISPLAY 'FETC1 OUT ' WS-SQLCODE
+             STOP RUN
+           END-EVALUATE.
+
+       4100-FETCH1-PARA-EXIT.
+           EXIT.
+
+       4100-FETCH2-PARA.
+           EXEC SQL
+              FETCH CR2 INTO :HV1-ID,
+                             :HV1-NAME
+           END-EXEC.
+           EVALUATE TRUE
+           WHEN SQLCODE = 0
+              MOVE HV1-ID-TEXT TO TO002-ID
+              MOVE HV1-NAME-TEXT TO TO002-ALL
+
+              MOVE HV1-ID-TEXT TO TO004-ID
+              MOVE HV1-NAME-TEXT TO TO004-ALL
+
+              PERFORM 2222-WRT-PARA THRU
+                      2222-WRT-PARA-EXIT
+
+              PERFORM 4444-WRT-PARA THRU
+                      4444-WRT-PARA-EXIT
+
+           WHEN SQLCODE = 100
+            CONTINUE
+           WHEN OTHER
+             MOVE SQLCODE TO WS-SQLCODE
+             DISPLAY 'FETC2 OUT ' WS-SQLCODE
+             STOP RUN
+           END-EVALUATE.
+
+       4100-FETCH2-PARA-EXIT.
+           EXIT.
+
+       4100-FETCH3-PARA.
+           EXEC SQL
+              FETCH CR3 INTO :HV2-ID,
+                             :HV2-NAME
+           END-EXEC.
+           EVALUATE TRUE
+           WHEN SQLCODE = 0
+
+              MOVE HV2-ID-TEXT TO TO003-ID
+              MOVE HV2-NAME-TEXT TO TO003-ALL
+
+              MOVE HV2-ID-TEXT TO TO004-ID
+              MOVE HV2-NAME-TEXT TO TO004-ALL
+
+              PERFORM 3333-WRT-PARA THRU
+                      3333-WRT-PARA-EXIT
+
+              PERFORM 4444-WRT-PARA THRU
+                      4444-WRT-PARA-EXIT
+
+           WHEN SQLCODE = 100
+             CONTINUE
+           WHEN OTHER
+             MOVE SQLCODE TO WS-SQLCODE
+             DISPLAY 'FETC3 OUT ' WS-SQLCODE
+             STOP RUN
+           END-EVALUATE.
+
+       4100-FETCH3-PARA-EXIT.
+           EXIT.
+
+
+      * END OF DB2 DB2 *
+      ******************************
+
+       4200-DBTOPS-PARA.
+           PERFORM 4200-READ-PARA THRU
+                   4200-READ-PARA-EXIT UNTIL F1-EOF
+           PERFORM 4200-FETCH-PARA THRU
+                   4200-FETCH-PARA-EXIT UNTIL SQLCODE = 100
+                   .
+       4200-DBTOPS-PARA-EXIT.
+           EXIT.
+      ******************************
+
+       4200-READ-PARA.
+           INITIALIZE DCLJI-TSK2
+           READ INPS
+           EVALUATE TRUE
+           WHEN F1-SUCC
+
+             PERFORM 4200-SQLMAT-PARA THRU
+                     4200-SQLMAT-PARA-EXIT
+
+             ADD 1 TO WS-K
+             MOVE TI001-ID TO AR001-ID(WS-K)
+             MOVE TI001-ALL  TO AR001-ALL(WS-K)
+
+           WHEN F1-EOF
+             CONTINUE
+           WHEN OTHER
+             DISPLAY 'READ FAIL ' WS-FS1
+             STOP RUN
+           END-EVALUATE.
+       4200-READ-PARA-EXIT.
+           EXIT.
+
+       4200-SQLMAT-PARA.
+           MOVE TI001-ID TO HV2-ID-TEXT
+           MOVE LENGTH OF HV2-ID-TEXT TO HV2-ID-LEN
+           EXEC SQL
+             SELECT ID,NAME
+             INTO :HV2-ID, :HV2-NAME FROM JI_TSK2
+             WHERE ID=:HV2-ID
+           END-EXEC.
+
+           EVALUATE TRUE
+           WHEN SQLCODE = 0
+
+             MOVE TI001-ID TO TO001-ID
+             MOVE TI001-ALL TO TO001-ALL
+
+             PERFORM 1111-WRT-PARA THRU
+                     1111-WRT-PARA-EXIT
+
+           WHEN SQLCODE = 100
+
+             MOVE ZERO TO SQLCODE
+             MOVE TI001-ID TO TO002-ID
+             MOVE TI001-ALL TO TO002-ALL
+
+             MOVE TI001-ID TO TO003-ID
+             MOVE TI001-ALL TO TO003-ALL
+
+             PERFORM 2222-WRT-PARA THRU
+                     2222-WRT-PARA-EXIT
+
+             PERFORM 3333-WRT-PARA THRU
+                     3333-WRT-PARA-EXIT
+
+
+           WHEN OTHER
+             MOVE SQLCODE TO WS-SQLCODE
+             DISPLAY 'SOMETHING WRONG... ' WS-SQLCODE
+             STOP RUN
+           END-EVALUATE.
+
+       4200-SQLMAT-PARA-EXIT.
+           EXIT.
+
+      *
+       4200-FETCH-PARA.
+           EXEC SQL
+             FETCH CR9 INTO :HV2-ID,
+                            :HV2-NAME
+           END-EXEC.
+
+           EVALUATE TRUE
+           WHEN SQLCODE = 0
+
+             PERFORM 4200-SEARCH-PARA THRU
+                     4200-SEARCH-PARA-EXIT
+
+           WHEN SQLCODE = 100
+             CONTINUE
+           WHEN OTHER
+             MOVE SQLCODE TO WS-SQLCODE
+             DISPLAY 'SOMETHING WRONG... FETCH ' WS-SQLCODE
+             STOP RUN
+           END-EVALUATE.
+
+       4200-FETCH-PARA-EXIT.
+           EXIT.
+      *
+       4200-SEARCH-PARA.
+
+           PERFORM UNTIL WS-I = WS-K
+
+             ADD 1 TO WS-I
+
+             IF AR001-ID(WS-I) = HV2-ID-TEXT
+
+               MOVE 0 TO WS-I
+               GO TO 4200-FETCH-PARA
+
+             ELSE
+
+               MOVE HV2-ID-TEXT TO TO004-ID
+               MOVE HV2-NAME TO TO004-ALL
+
+               MOVE HV2-ID-TEXT TO TO002-ID
+               MOVE HV2-NAME    TO TO002-ALL
+
+             END-IF
+
+           END-PERFORM.
+
+               PERFORM 2222-WRT-PARA THRU
+                       2222-WRT-PARA-EXIT
+
+               PERFORM 4444-WRT-PARA THRU
+                       4444-WRT-PARA-EXIT
+
+           MOVE 0 TO WS-I
+           .
+       4200-SEARCH-PARA-EXIT.
+           EXIT.
+
+      * END OF PS TO DB2
+      *******************************
+
+       4300-DBTOKS-PARA.
+           PERFORM 4300-READ-PARA THRU
+                   4300-READ-PARA-EXIT UNTIL F1-EOF
+           MOVE ZERO TO SQLCODE
+           PERFORM 4300-FETCH-PARA THRU
+                   4300-FETCH-PARA-EXIT UNTIL SQLCODE = 100
+                   .
+
+       4300-DBTOKS-PARA-EXIT.
+           EXIT.
+      ********************************
+       4300-READ-PARA.
+           INITIALIZE DCLJI-TSK2
+           READ INKS NEXT
+           EVALUATE TRUE
+           WHEN F1-SUCC
+
+             PERFORM 4300-SQLMAT-PARA THRU
+                     4300-SQLMAT-PARA-EXIT
+
+           WHEN F1-EOF
+             CONTINUE
+           WHEN OTHER
+             DISPLAY 'READ FAIL ' WS-FS1
+             STOP RUN
+           END-EVALUATE.
+       4300-READ-PARA-EXIT.
+           EXIT.
+
+       4300-SQLMAT-PARA.
+           MOVE TI001-ID TO HV2-ID-TEXT
+           MOVE LENGTH OF HV2-ID-TEXT TO HV2-ID-LEN
+
+           EXEC SQL
+             SELECT ID,NAME
+             INTO :HV2-ID, :HV2-NAME FROM JI_TSK2
+             WHERE ID=:HV2-ID
+           END-EXEC.
+
+           EVALUATE TRUE
+           WHEN SQLCODE = 0
+
+             MOVE TI001-ID TO TO001-ID
+             MOVE TI001-ALL TO TO001-ALL
+
+             PERFORM 1111-WRT-PARA THRU
+                     1111-WRT-PARA-EXIT
+
+           WHEN SQLCODE = 100
+
+             MOVE TI001-ID TO TO002-ID
+             MOVE TI001-ALL TO TO002-ALL
+
+             MOVE TI001-ID TO TO003-ID
+             MOVE TI001-ALL TO TO003-ALL
+
+             PERFORM 2222-WRT-PARA THRU
+                     2222-WRT-PARA-EXIT
+
+             PERFORM 3333-WRT-PARA THRU
+                     3333-WRT-PARA-EXIT
+
+           WHEN OTHER
+             MOVE SQLCODE TO WS-SQLCODE
+             DISPLAY 'REC NOT FIUNDNG... ' WS-SQLCODE
+             STOP RUN
+           END-EVALUATE.
+      *
+       4300-SQLMAT-PARA-EXIT.
+           EXIT.
+
+      *
+       4300-FETCH-PARA.
+           EXEC SQL
+              FETCH CR9 INTO :HV2-ID,
+                             :HV2-NAME
+           END-EXEC.
+           EVALUATE TRUE
+           WHEN SQLCODE = 0
+
+             PERFORM 4300-SEARCH-PARA THRU
+                     4300-SEARCH-PARA-EXIT
+
+           WHEN SQLCODE = 100
+             CONTINUE
+           WHEN OTHER
+             MOVE SQLCODE TO WS-SQLCODE
+             DISPLAY 'REC NOT FIUNDNG... ' WS-SQLCODE
+             STOP RUN
+           END-EVALUATE.
+      *
+       4300-FETCH-PARA-EXIT.
+           EXIT.
+      *
+       4300-SEARCH-PARA.
+
+           MOVE HV2-ID-TEXT TO TI001-ID
+           DISPLAY HV2-ID-TEXT TI001-ID
+           READ INKS
+
+           EVALUATE TRUE
+           WHEN F1-SUCC
+            CONTINUE
+
+           WHEN WS-FS1 = 23
+
+            MOVE HV2-ID-TEXT TO TO004-ID
+            MOVE HV2-NAME-TEXT TO TO004-ALL
+
+            MOVE HV2-ID-TEXT TO TO002-ID
+            MOVE HV2-NAME-TEXT TO TO002-ALL
+
+            PERFORM 2222-WRT-PARA THRU
+                    2222-WRT-PARA-EXIT
+
+            PERFORM 4444-WRT-PARA THRU
+                    4444-WRT-PARA-EXIT
+
+           WHEN OTHER
+            DISPLAY 'KSDS READ ' WS-FS1
+           END-EVALUATE.
+
+       4300-SEARCH-PARA-EXIT.
+           EXIT.
+
+      * END OF PS TO KSDS *
+      ********************************
+       1111-WRT-PARA.
+
+           WRITE TO001-OUTREC.
+           EVALUATE TRUE
+           WHEN F3-SUCC
+             DISPLAY 'WRT 1 SUCC'
+           WHEN OTHER
+             DISPLAY 'WRT 1 FIL ' WS-FS3
+           END-EVALUATE.
+
+       1111-WRT-PARA-EXIT.
+           EXIT.
+      *
+       2222-WRT-PARA.
+
+           WRITE TO002-OUTREC.
+           EVALUATE TRUE
+           WHEN F4-SUCC
+             DISPLAY 'WRT 2 SUCC'
+           WHEN OTHER
+             DISPLAY 'WRT 2 FIL ' WS-FS4
+           END-EVALUATE.
+
+       2222-WRT-PARA-EXIT.
+           EXIT.
+      *
+       3333-WRT-PARA.
+
+           WRITE TO003-OUTREC.
+           EVALUATE TRUE
+           WHEN F5-SUCC
+             DISPLAY 'WRT 3 SUCC'
+           WHEN OTHER
+             DISPLAY 'WRT 3 FIL ' WS-FS5
+           END-EVALUATE.
+
+       3333-WRT-PARA-EXIT.
+           EXIT.
+      *
+       4444-WRT-PARA.
+
+           WRITE TO004-OUTREC.
+           EVALUATE TRUE
+           WHEN F5-SUCC
+             DISPLAY 'WRT 4 SUCC'
+           WHEN OTHER
+             DISPLAY 'WRT 4 FIL ' WS-FS6
+           END-EVALUATE.
+
+       4444-WRT-PARA-EXIT.
+           EXIT.
+
+       5000-CLOSE-PARA.
+           EVALUATE TRUE
+           WHEN  WS-FS1 NOT = 35
+
+             CLOSE INPS
+             EVALUATE TRUE
+             WHEN F1-SUCC
+               DISPLAY 'PS CLOSE'
+             WHEN OTHER
+               DISPLAY 'PS CLOSE F ' WS-FS1
+               STOP RUN
+             END-EVALUATE
+
+           WHEN WS-FS2 NOT = 35
+
+             CLOSE INKS
+             EVALUATE TRUE
+             WHEN F2-SUCC
+               DISPLAY 'KS CLOSE'
+             WHEN OTHER
+               DISPLAY 'KS CLOSE F ' WS-FS2
+               STOP RUN
+             END-EVALUATE
+
+           WHEN OTHER
+             DISPLAY 'TWO FILE NOT OPEN'
+           END-EVALUATE.
+
+           EXEC SQL
+             CLOSE CR1
+           END-EXEC.
+
+           EXEC SQL
+             CLOSE CR2
+           END-EXEC.
+
+           EXEC SQL
+             CLOSE CR3
+           END-EXEC.
+
+           EXEC SQL
+             CLOSE CR4
+           END-EXEC.
+
+       5000-CLOSE-PARA-EXIT.
+           EXIT.
+
+       9000-TERM-PARA.
+           STOP RUN.
+
+       9000-TERM-PARA-EXIT.
+           EXIT.
+      *
